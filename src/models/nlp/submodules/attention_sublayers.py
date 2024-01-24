@@ -188,3 +188,9 @@ class PositionwiseFeedForward(nn.Module):
         out = self.W2(self.relu(self.dropout(self.W1(x))))
         return out
     
+class BertEmbedding(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self):
+        pass
