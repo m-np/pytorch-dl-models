@@ -1,6 +1,6 @@
 # torch packages
 import torch
-from src.models.nlp.original_transformer import Transformer
+from src.models.nlp.original_transformer.transformer import Transformer
 import config
 import json
 from utils.common import count_parameters

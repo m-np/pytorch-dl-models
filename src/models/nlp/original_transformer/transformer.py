@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from torch import Tensor
 import torch.optim as optim
 
-from src.models.nlp.submodules.attention_sublayers import (
+from src.models.nlp.original_transformer.attention_sublayers import (
                                                     MultiHeadAttention,
                                                     PositionalEncoding,
                                                     PositionwiseFeedForward,
