@@ -25,7 +25,7 @@ if __name__ == "__main__":
         choices=[el.name for el in MLModel], 
         type=str.lower,
         help='which ML Model to view', 
-        default=MLModel.original_transformer.name)
+        default=MLModel.transformer.name)
 
     args = parser.parse_args()
     # Wrapping training configuration into a dictionary
