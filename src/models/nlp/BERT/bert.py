@@ -20,6 +20,23 @@ from src.models.nlp.Bert.attention_sublayers import (
                                                     )
 
 
+def get_params():
+    params = {
+            "dk": 64,
+            "dv": 64, 
+            "h": 12, 
+            "vocab_size": 8500, 
+            "target_vocab_size": 6500,  
+            "num_encoders": 12, 
+            "seq_len": 128,
+            "dim_multiplier": 4, 
+            "pdropout": 0.1, 
+            "lr": 0.0003, 
+            "N_EPOCHS": 50, 
+            "CLIP": 1, 
+            "patience": 5}
+    return params
+
 class EncoderLayer(nn.Module):
     """
     This building block in the encoder layer consists of the following
@@ -193,16 +210,19 @@ class BERTLM(nn.Module):
     """
     def __init__(
                 self,
-                dk, 
-                dv, 
-                h,
-                vocab_size,
-                seq_len,
-                num_encoders,
-                dim_multiplier = 4, 
-                pdropout = 0.1
+                params,
+                device = "cpu",
                 ):
         super().__init__()
+        dk = params["dk"] 
+        dv = params["dv"] 
+        h = params["h"]
+        vocab_size = params["vocab_size"]
+        seq_len = params["seq_len"]
+        num_encoders = params["num_encoders"]
+        dim_multiplier = params["dim_multiplier"] 
+        pdropout = params["pdropout"]
+
         self.bert = BERT(
                         dk, 
                         dv, 
@@ -228,3 +248,4 @@ class BERTLM(nn.Module):
                 segment_label):
         x = self.bert(token_ids_batch, segment_label)
         return (self.mlm(x), self.nsp(x))
+    

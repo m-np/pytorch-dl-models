@@ -20,6 +20,25 @@ from src.models.nlp.original_transformer.attention_sublayers import (
                                                     Embedding)
 
 
+def get_params():
+    params = {
+        "dk": 32, 
+        "dv": 32, 
+        "h": 8, 
+        "src_vocab_size": 8500, 
+        "target_vocab_size": 6500, 
+        "src_pad_idx": 2, 
+        "target_pad_idx": 2, 
+        "num_encoders": 3, 
+        "num_decoders": 3, 
+        "dim_multiplier": 4, 
+        "pdropout": 0.1, 
+        "lr": 0.0003, 
+        "N_EPOCHS": 50, 
+        "CLIP": 1, 
+        "patience": 5}
+    return params
+
 class EncoderLayer(nn.Module):
     """
     This building block in the encoder layer consists of the following
@@ -202,25 +221,28 @@ class Decoder(nn.Module):
 
 class Transformer(nn.Module):
     def __init__(self,
-                dk, 
-                dv, 
-                h,
-                src_vocab_size,
-                target_vocab_size,
-                num_encoders,
-                num_decoders,
-                src_pad_idx,
-                target_pad_idx,
-                dim_multiplier = 4, 
-                pdropout=0.1,
-                device = "cpu"
+                params,
+                device = "cpu",
                 ):
         super().__init__()
+        dk = params["dk"] 
+        dv = params["dv"] 
+        h = params["h"]
+        src_vocab_size = params["src_vocab_size"]
+        target_vocab_size = params["target_vocab_size"]
+        num_encoders = params["num_encoders"]
+        num_decoders = params["num_decoders"]
+        src_pad_idx = params["src_pad_idx"]
+        target_pad_idx = params["target_pad_idx"]
+        dim_multiplier = params["dim_multiplier"] 
+        pdropout = params["pdropout"]
         
         # Reference page 5 chapter 3.2.2 Multi-head attention
         dmodel = dk*h
         # Modules required to build Encoder
-        self.src_embeddings = Embedding(src_vocab_size, dmodel)
+        self.src_embeddings = Embedding(
+                                        src_vocab_size,
+                                        dmodel)
         self.src_positional_encoding = PositionalEncoding(
                                         dmodel,
                                         max_seq_length = src_vocab_size,
@@ -344,38 +366,3 @@ class Transformer(nn.Module):
 #         out = self.softmax(out)
         return out
     
-# def count_parameters(model):
-#     return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-# if __name__ == "__main__":
-#     """
-#     Following parameters are for Multi30K dataset
-#     """
-#     dk = 32
-#     dv = 32
-#     h = 8
-#     src_vocab_size = 7983
-#     target_vocab_size = 5979
-#     src_pad_idx = 2
-#     target_pad_idx = 2
-#     num_encoders = 3
-#     num_decoders = 3
-#     dim_multiplier = 4
-#     pdropout=0.1
-#     # print(111)
-#     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#     model = Transformer(
-#                     dk, 
-#                     dv, 
-#                     h,
-#                     src_vocab_size,
-#                     target_vocab_size,
-#                     num_encoders,
-#                     num_decoders,
-#                     dim_multiplier, 
-#                     pdropout,
-#                     device = device)
-#     if torch.cuda.is_available():         
-#         model.cuda()
-#     print(model)
-#     print(f'The model has {count_parameters(model):,} trainable parameters')
