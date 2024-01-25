@@ -16,7 +16,7 @@ class ModelLoader:
 
         self.model = None 
         # Get input params and instantiate model
-        if self.model_name.lower() == model_registry.MLModel.original_transformer.name:
+        if self.model_name.lower() == model_registry.MLModel.transformer.name:
             params = transformer.get_params()
             self.model = transformer.Transformer(
                             params, 
