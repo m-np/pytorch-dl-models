@@ -21,6 +21,7 @@ from src.models.nlp.original_transformer.attention_sublayers import (
 
 
 def get_params():
+    # The following params are for training DE-EN model on Multi30K data
     params = {
         "dk": 32, 
         "dv": 32, 
