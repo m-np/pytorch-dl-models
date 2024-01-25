@@ -92,80 +92,36 @@ class MultiHeadAttention(nn.Module):
         # Pass through output layer
         token_representation = self.WO(head)
         return token_representation, attn_probs
-
-
-class Embedding(nn.Module):
-    """
-    Embedding lookup table which is used by the positional 
-    embedding block.
-    Embedding lookup table is shared across input and output
-    """
-    def __init__(self, vocab_size, dmodel):
-        """
-        Embedding lookup needs a vocab size and model 
-        dimension size matrix for creating lookups
-        """
-        super().__init__()
-        self.embedding_lookup = nn.Embedding(vocab_size, dmodel)
-        self.vocab_size = vocab_size
-        self.dmodel = dmodel
-
-    def forward(self, token_ids):
-        """
-        For a given token lookup the embedding vector
-        
-        As per the paper, we also multiply the embedding vector with sqrt of dmodel 
-        """
-        assert token_ids.ndim == 2, \
-        f'Expected: (batch size, max token sequence length), got {token_ids.shape}'
-        
-        embedding_vector = self.embedding_lookup(token_ids)
-        
-        return embedding_vector * math.sqrt(self.dmodel)
     
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, dmodel, max_seq_length = 5000, pdropout = 0.1,):
+    def __init__(self, dmodel, max_seq_length = 5000):
         """
         dmodel(int): model dimensions
         max_seq_length(int): Maximum input sequence length
         pdropout(float): Dropout probability
         """
         super().__init__()
-        self.dropout = nn.Dropout(p = pdropout)
-        
         # Calculate frequencies
         position_ids = torch.arange(0, max_seq_length).unsqueeze(1)
         # -ve sign is added because the exponents are inverted when you multiply position and frequencies
         frequencies = torch.pow(10000, -torch.arange(0, dmodel, 2, dtype = torch.float)/ dmodel) 
         
         # Create positional encoding table
-        positional_encoding_table = torch.zeros(max_seq_length, dmodel)
+        positional_encoding_table = torch.zeros(max_seq_length, dmodel).float()
+        positional_encoding_table.require_grad = False
         # Fill the table with even entries with sin and odd entries with cosine
         positional_encoding_table[:, 0::2] = torch.sin(position_ids * frequencies)
         positional_encoding_table[:, 1::2] = torch.cos(position_ids * frequencies)
-    
-        # Registering the position enconding in state_dict but the its not included 
-        # in named parameter as it is not trainable
-        self.register_buffer("positional_encoding_table", positional_encoding_table)
 
+        # include the batch size
+        self.positional_encoding_table = positional_encoding_table.unsqueeze(0)
+        
     def forward(self, embeddings_batch):
         """
         embeddings_batch shape = (batch size, seq_length, dmodel)
-        positional_encoding_table shape = (max_seq_length, dmodel)
         """
-        assert embeddings_batch.ndim == 3, \
-        f"Embeddings batch should have dimension of 3 but got {embeddings_batch.ndim}"
-        assert embeddings_batch.size()[-1] == self.positional_encoding_table.size()[-1], \
-        f"Embedding batch shape and positional_encoding_table shape should match, expected Embedding batch shape : {embeddings_batch.shape[-1]} while positional_encoding_table shape : {self.positional_encoding_table[-1]}"
-        
-        # Get encodings for the given input sequence length
-        pos_encodings = self.positional_encoding_table[:embeddings_batch.shape[1]] # Choose only seq_length out of max_seq_length
-        
-        # Final output 
-        out = embeddings_batch + pos_encodings
-        out = self.dropout(out)
-        return out
+        return self.positional_encoding_table
 
  
 class PositionwiseFeedForward(nn.Module):
@@ -187,4 +143,44 @@ class PositionwiseFeedForward(nn.Module):
         """
         out = self.W2(self.relu(self.dropout(self.W1(x))))
         return out
+    
+class BertEmbedding(nn.Module):
+    """
+    Bert Embedding consists of the combiantion of following embeddings
+    1. Token Embeddings - Normal embedding matrix for the tokens in sentence
+    2. Segment Embeddings - adding sentence segment info, (sent_A:1, sent_B:2)
+    3. Positional Embeddings - Adding positional information throug sin and cos
+    """
+    def __init__(self, vocab_size, embed_size, seq_len, pdropout= 0.1):
+        """
+        Input Args:
+        vocab_size : Total vocab size
+        embed_size : dmodel -> Embedding size of token embedding
+        seq_len: Max seq len used for positional encoding
+        pdropout: dropout rate
+        """
+        super().__init__()
+        self.token_embeddings = nn.Embedding(
+                                        vocab_size, 
+                                        embed_size,
+                                        padding_idx=0)
+        self.position_encoding = PositionalEncoding(
+                                        dmodel = embed_size,
+                                        max_seq_length = seq_len
+                                        )
+        # vocab size for segment embedding is 3 since we can use 2 sentences
+        # as input and last one is for end token
+        self.segment_embeddings = nn.Embedding(
+                                            3,
+                                            embed_size, 
+                                            padding_idx=0)
+        self.dropout = nn.Dropout(p = pdropout)
+
+    def forward(self, token_ids_batch, segment_label):
+        out = (
+            self.token_embeddings(token_ids_batch) +
+            self.segment_embeddings(segment_label) +
+            self. position_encoding(token_ids_batch)
+               )
+        return self.dropout(out)
     

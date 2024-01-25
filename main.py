@@ -1,33 +1,37 @@
 # torch packages
-import torch
-from src.models.nlp.original_transformer import Transformer
-import config
-import json
+import os
+
+import argparse
+
 from utils.common import count_parameters
+from src.model_registry import (
+                                MLModel,
+                                get_model
+                                )
 
-if __name__ == "__main__":
-    """
-    Following parameters are for Multi30K dataset
-    """
-    # Load config containing model input parameters 
-    # params = config.transformer_params
-    with open("config/transformer_params.json") as json_data:
-        config = json.load(json_data)
-    print(config)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # Instantiate model
-    model = Transformer(
-                    config["dk"], 
-                    config["dv"], 
-                    config["h"],
-                    config["src_vocab_size"],
-                    config["target_vocab_size"],
-                    config["num_encoders"],
-                    config["num_decoders"],
-                    config["dim_multiplier"], 
-                    config["pdropout"],
-                    device = device)
+def inspect_model(model_name):
+    loader = get_model(model_name)
+    model = loader.model
     print(model)
     print(f'The model has {count_parameters(model):,} trainable parameters')
-    
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--MLModel", "-m", 
+        choices=[el.name for el in MLModel], 
+        type=str.lower,
+        help='which ML Model to view', 
+        default=MLModel.transformer.name)
+
+    args = parser.parse_args()
+    # Wrapping training configuration into a dictionary
+    config = dict()
+    for arg in vars(args):
+        config[arg] = getattr(args, arg)
+    print(config)
+    print()
+    inspect_model(config["MLModel"])
