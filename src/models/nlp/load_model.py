@@ -15,6 +15,10 @@ class ModelLoader:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.model = None 
+        model_list = [
+                        model_registry.MLModel.transformer.name,
+                        model_registry.MLModel.bertlm.name,
+                      ]
         # Get input params and instantiate model
         if self.model_name.lower() == model_registry.MLModel.transformer.name:
             params = transformer.get_params()
@@ -28,7 +32,8 @@ class ModelLoader:
                             params, 
                             device=self.device)
         else:
-            raise AssertionError (f"model {model_name} is not registered in model_registry")
+            raise AssertionError (
+                f"model {model_name} is not registered in NLP in model_registry pick from following list: {model_list}")
 
         if self.model and torch.cuda.is_available():
             self.model.cuda()
