@@ -10,8 +10,8 @@ class MLModel(enum.Enum):
     transformer = 1
     lenet = 3
     alexnet = 4
+    vggnet = 5
     # TODO below models
-    # vggnet = 5
     # inception = 6
     # mobilenet = 7
     # resnet = 8
