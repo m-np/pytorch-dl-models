@@ -1,6 +1,7 @@
 # torch packages
 import torch
 import src.models.cv.lenet.lenet as lenet
+import src.models.cv.alexnet.alexnet as alexnet
 import src.model_registry as model_registry
 
 
@@ -21,6 +22,11 @@ class ModelLoader:
         if self.model_name.lower() == model_registry.MLModel.lenet.name:
             params = lenet.get_params()
             self.model = lenet.LeNet(
+                            params, 
+                            device=self.device)
+        elif self.model_name.lower() == model_registry.MLModel.alexnet.name:
+            params = alexnet.get_params()
+            self.model = alexnet.AlexNet(
                             params, 
                             device=self.device)
             

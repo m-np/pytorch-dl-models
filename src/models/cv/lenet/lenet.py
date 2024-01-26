@@ -28,6 +28,17 @@ def get_params():
 
 
 class LeNet(nn.Module):
+    """
+    Consists of 2 blocks
+
+    1. Convolution block 2 layers containig
+        - convolution2d
+        - tanh
+        - avgpooling2d
+    2. Fully Connected Layers 2 block containing and a flattern layer
+        - linear
+        - tanh
+    """
     def __init__(self, params, device="cpu"):
         super().__init__()
 
