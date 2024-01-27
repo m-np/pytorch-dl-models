@@ -31,6 +31,5 @@ jobs:
         run: |
           git config --global user.name 'm-np'
           git config --global user.email 'mandar4tech@gmail.com'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git commit -am "Automated changes"
           git push
