@@ -10,12 +10,15 @@ from src.model_registry import (
                                 get_model
                                 )
 
+from torchview import draw_graph
+
 
 def inspect_model(ml_task, model_name):
     loader = get_model(ml_task, model_name)
     model = loader.model
     print(model)
     print(f'The model has {count_parameters(model):,} trainable parameters')
+
 
 
 if __name__ == "__main__":

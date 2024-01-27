@@ -24,18 +24,6 @@ def get_params():
     params = {
             "in_channels" : 3,
             "num_classes": 1000,
-            "layer_filter": 64,
-
-            "conv1_filters": 64,
-            "conv2_filters": 128,
-            "conv3_filters": 256,
-            "conv4_filters": 512,
-
-            "expansion": 4,
-            "num_blocks_1": 3,
-            "num_blocks_2": 4,
-            "num_blocks_3": 6,
-            "num_blocks_4": 3,
             }
     return params
 
@@ -125,10 +113,10 @@ class InceptionBlock(nn.Module):
                             stride = 1, 
                             padding= 0),
                         ConvBlock(
-                            in_channels = in_channels, 
+                            in_channels = out21, 
                             out_channels = out22, 
                             kernel_size = 3, 
-                            stride = 3, 
+                            stride = 1, 
                             padding= 1)
                         )
         
@@ -141,10 +129,10 @@ class InceptionBlock(nn.Module):
                             stride = 1, 
                             padding= 0),
                         ConvBlock(
-                            in_channels = in_channels, 
+                            in_channels = out31, 
                             out_channels = out32, 
                             kernel_size = 5, 
-                            stride = 5, 
+                            stride = 1, 
                             padding= 2)
                         )
         
@@ -167,6 +155,10 @@ class InceptionBlock(nn.Module):
         out2 = self.branch2(x)
         out3 = self.branch3(x)
         out4 = self.branch4(x)
+        print(out1.shape)
+        print(out2.shape)
+        print(out3.shape)
+        print(out4.shape)
         return torch.cat([out1, out2, out3, out4], dim=1)
 
 
@@ -179,91 +171,151 @@ class Inception_v1(nn.Module):
 
         in_channels = params["in_channels"]
         num_classes = params["num_classes"]
-        layer_filter = params["layer_filter"]
-        expansion = params["expansion"]
 
-        num_blocks_1 = params["num_blocks_1"]
-        num_blocks_2 = params["num_blocks_2"]
-        num_blocks_3 = params["num_blocks_3"]
-        num_blocks_4 = params["num_blocks_4"]
-
-        conv1_filters = params["conv1_filters"]
-        conv2_filters = params["conv2_filters"]
-        conv3_filters = params["conv3_filters"]
-        conv4_filters = params["conv4_filters"]
-
-
-
-
-        self.layer1 = nn.Sequential(
-                        nn.Conv2d(
+        self.conv1 = nn.Sequential(
+                        ConvBlock(
                             in_channels = in_channels, 
-                            out_channels = layer_filter, 
+                            out_channels = 64, 
                             kernel_size = 7, 
                             stride = 2, 
-                            padding = 3),
-                        nn.BatchNorm2d(layer_filter),
-                        nn.ReLU(),
+                            padding= 1),
                         nn.MaxPool2d(
                             kernel_size = 3, 
                             stride = 2,
                             padding = 1)
                         )
 
-        self.resid_conv1 = self.create_resid_layers(
-                            in_channels = layer_filter, 
-                            out_channels = conv1_filters, 
+        self.conv2 = nn.Sequential(
+                        ConvBlock(
+                            in_channels = 64, 
+                            out_channels = 64, 
+                            kernel_size = 1, 
                             stride = 1, 
-                            expansion = expansion, 
-                            num_blocks = num_blocks_1,
+                            padding= 0),
+                        ConvBlock(
+                            in_channels = 64, 
+                            out_channels = 192, 
+                            kernel_size = 3, 
+                            stride = 1, 
+                            padding= 1),
+                        nn.MaxPool2d(
+                            kernel_size = 3, 
+                            stride = 2,
+                            padding = 1)
                         )
         
-        self.resid_conv2 = self.create_resid_layers(
-                            in_channels = conv1_filters*expansion, 
-                            out_channels = conv2_filters, 
-                            stride = 2, 
-                            expansion = expansion, 
-                            num_blocks = num_blocks_2,
-                        )
+        # Start Adding Inception block
+        self.inception3a = InceptionBlock(
+                            in_channels = 192, 
+                            out1 = 64, 
+                            out21 = 96, 
+                            out22 = 128, 
+                            out31 = 16, 
+                            out32 = 32, 
+                            out4 = 32)
+        self.inception3b = nn.Sequential(
+                            InceptionBlock(
+                                in_channels = 256, 
+                                out1 = 128, 
+                                out21 = 128, 
+                                out22 = 192, 
+                                out31 = 32, 
+                                out32 = 96, 
+                                out4 = 64),
+                            nn.MaxPool2d(
+                                kernel_size = 3, 
+                                stride = 2,
+                                padding = 1))
         
-        self.resid_conv3 = self.create_resid_layers(
-                            in_channels = conv2_filters*expansion, 
-                            out_channels = conv3_filters, 
-                            stride = 2, 
-                            expansion = expansion, 
-                            num_blocks = num_blocks_3,
-                        )
+        self.inception4a = InceptionBlock(
+                            in_channels = 480, 
+                            out1 = 192, 
+                            out21 = 96, 
+                            out22 = 208, 
+                            out31 = 16, 
+                            out32 = 48, 
+                            out4 = 64)
+        self.inception4b = InceptionBlock(
+                            in_channels = 512, 
+                            out1 = 160, 
+                            out21 = 112, 
+                            out22 = 224, 
+                            out31 = 24, 
+                            out32 = 64, 
+                            out4 = 64)
+        self.inception4c = InceptionBlock(
+                            in_channels = 512, 
+                            out1 = 128, 
+                            out21 = 128, 
+                            out22 = 256, 
+                            out31 = 24, 
+                            out32 = 64, 
+                            out4 = 64)
+        self.inception4d = InceptionBlock(
+                            in_channels = 512, 
+                            out1 = 112, 
+                            out21 = 144, 
+                            out22 = 288, 
+                            out31 = 32, 
+                            out32 = 64, 
+                            out4 = 64)
+        self.inception4e = nn.Sequential(
+                            InceptionBlock(
+                                in_channels = 528, 
+                                out1 = 256, 
+                                out21 = 160, 
+                                out22 = 320, 
+                                out31 = 32, 
+                                out32 = 128, 
+                                out4 = 128),
+                            nn.MaxPool2d(
+                                kernel_size = 3, 
+                                stride = 2,
+                                padding = 1))
+        
+        self.inception5a = InceptionBlock(
+                            in_channels = 832, 
+                            out1 = 256, 
+                            out21 = 160, 
+                            out22 = 320, 
+                            out31 = 32, 
+                            out32 = 128, 
+                            out4 = 128)
+        self.inception5b = nn.Sequential(
+                            InceptionBlock(
+                                in_channels = 832, 
+                                out1 = 384, 
+                                out21 = 192, 
+                                out22 = 384, 
+                                out31 = 48, 
+                                out32 = 128, 
+                                out4 = 128),
+                            nn.AvgPool2d(
+                                kernel_size = 7, 
+                                stride = 1))
+        
+        self.dropout = nn.Dropout(p=0.4)
+        self.fc1 = nn.Linear( 1024 , num_classes)
+        
 
-        self.resid_conv4 = self.create_resid_layers(
-                            in_channels = conv3_filters*expansion, 
-                            out_channels = conv4_filters, 
-                            stride = 2, 
-                            expansion = expansion, 
-                            num_blocks = num_blocks_4,
-                        )
-        
-        # Average pooling (used in classification head)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-
-        # Classification task 
-        # in_channel = 4, By default, ResBlock.expansion = 4 for ResNet-50, 101, 152, 
-        # Check line 77
-        self.linear = nn.Linear(
-                            in_features=conv4_filters*expansion, 
-                            out_features=num_classes)
-
-        
     def forward(self, x):
-        # Perform convolutions
-        x = self.layer1(x)
-        C1 = self.resid_conv1(x)
-        C2 = self.resid_conv2(x)
-        C3 = self.resid_conv3(x)
-        C4 = self.resid_conv4(x)
+        x = self.conv1(x)
+        x = self.conv2(x)
 
-        out = self.avgpool(C4)
-        out = out.reshape(out.shape[0], -1)
-        out = self.fc(out)
+        x = self.inception3a(x)
+        x = self.inception3b(x)
+        
+        x = self.inception4a(x)
+        x = self.inception4b(x)
+        x = self.inception4c(x)
+        x = self.inception4d(x)
+        x = self.inception4e(x)
 
-        return C1, C2, C3, C4, out
+        x = self.inception5a(x)
+        x = self.inception5b(x)
 
+        x = self.dropout(x)
+        x = torch.flatten(x, start_dim=1)
+        x = self.fc1(x)
+
+        return x

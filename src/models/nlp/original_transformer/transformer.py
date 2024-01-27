@@ -1,6 +1,6 @@
 """
 model - Original Annotated Transformer
-reference : https://arxiv.org/abs/1810.04805
+reference : https://arxiv.org/abs/1706.03762
 
 This model was developed for NLP task. It was trained especially for optimizing the following objective
 1. Machine Translation (English - French). I have used the model params for Ferman to English translation on
