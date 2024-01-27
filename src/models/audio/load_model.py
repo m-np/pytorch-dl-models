@@ -1,9 +1,10 @@
 # torch packages
+
 import torch
 
 import src.model_registry as model_registry
 
-import os
+
 class ModelLoader:
     def __init__(self, model_name):
         """
