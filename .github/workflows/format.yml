@@ -11,6 +11,10 @@ jobs:
       - uses: actions/checkout@v1
         with:
           ref: ${{ github.head_ref }}
+      - name: Check username
+        run: |
+          echo ${{ github.actor }}
+          echo ${{ github.actor }}@users.noreply.github.com
       - name: Format code with black
         run: |
           pip install black
