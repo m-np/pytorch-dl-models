@@ -68,7 +68,7 @@ The above models are also registered in the following [model registry](src/model
 For visualizing a model for a task, please follow the following steps after running `conda activate <env_name>` 
 
 ```python
-python main.py -t <MLTask> -m <MLModel as per the above task>
+python main.py -t <MLTask> -m <MLModel as per above table>
 ```
 You can also check the various MLTask/MLModel in the following [model registry](src/model_registry.py)
 
