@@ -46,6 +46,14 @@ For other module installation, please follow the following steps:
 2. Run `conda activate <env_name>`
 3. Run `pip install -r requirements.txt` found 👉 [`requirements.txt`](./requirements.txt)
 
+## Table of content
+
+This repo showcases models from the below ML tasks
+
+| ML Task    | ML Models |
+| --------- | ------- |
+| CV     | [LeNet](src/models/cv/lenet) |
+|        | [AlexNet](src/models/cv/alexnet) |
 
 ## LICENSE 
 
