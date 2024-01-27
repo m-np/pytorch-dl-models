@@ -2,7 +2,6 @@
 import torch
 
 import src.model_registry as model_registry
-import src.models.audio.Wavenet.wavenet as wavenet
 
 
 class ModelLoader:
