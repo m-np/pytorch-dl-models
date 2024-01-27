@@ -2,8 +2,7 @@
 import torch
 
 import src.model_registry as model_registry
-import src.models.nlp.Bert.bert as bert
-import src.models.nlp.original_transformer.transformer as transformer
+import src.models.audio.Wavenet.wavenet as wavenet
 
 
 class ModelLoader:
