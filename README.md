@@ -50,7 +50,7 @@ For other module installation, please follow the following steps:
 
 This repo showcases models from the below ML tasks
 
-| ML Task    | ML Models | Description |
+| ML Task    | ML Model | Description |
 | --------- | ------- | ------ |
 | CV     | [LeNet](src/models/cv/lenet) | Designed for Image Classification Task |
 |        | [AlexNet](src/models/cv/alexnet) | Designed for Image Classification Task |
@@ -61,6 +61,14 @@ This repo showcases models from the below ML tasks
 | NLP       | [Transformer](src/models/nlp/original_transformer) | Designed for Machine Translation |
 |        | [Bert](src/models/nlp/Bert) | Designed for Language Modeling |
 
+## Usage
+
+For visualizing a model for a task, please follow the following steps after running `conda activate <env_name>` 
+
+```python
+python main.py -t <MLTask> -m <MLModel as per the above task>
+```
+You can also check the various MLTask/MLModel in the following [model registry](src/model_registry.py)
 
 ## LICENSE 
 
