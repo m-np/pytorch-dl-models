@@ -5,6 +5,7 @@ reference : https://arxiv.org/abs/1704.04861
 This model was developed for image classification task for CIFAR-10..
 This model was designed for speed and not size as they use depthwise convolution to build a light weight deep NN
 """
+
 from collections import OrderedDict
 
 # torch packages
