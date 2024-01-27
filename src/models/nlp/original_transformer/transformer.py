@@ -1,3 +1,11 @@
+"""
+model - Original Annotated Transformer
+reference : https://arxiv.org/abs/1706.03762
+
+This model was developed for NLP task. It was trained especially for optimizing the following objective
+1. Machine Translation (English - French). I have used the model params for Ferman to English translation on
+Multi30k dataset
+"""
 import math
 import copy
 import time
@@ -23,15 +31,15 @@ from src.models.nlp.original_transformer.attention_sublayers import (
 def get_params():
     # The following params are for training DE-EN model on Multi30K data
     params = {
-        "dk": 32, 
-        "dv": 32, 
+        "dk": 64, 
+        "dv": 64, 
         "h": 8, 
         "src_vocab_size": 8500, 
         "target_vocab_size": 6500, 
         "src_pad_idx": 2, 
         "target_pad_idx": 2, 
-        "num_encoders": 3, 
-        "num_decoders": 3, 
+        "num_encoders": 6, 
+        "num_decoders": 6, 
         "dim_multiplier": 4, 
         "pdropout": 0.1, 
         "lr": 0.0003, 

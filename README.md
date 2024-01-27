@@ -46,6 +46,31 @@ For other module installation, please follow the following steps:
 2. Run `conda activate <env_name>`
 3. Run `pip install -r requirements.txt` found 👉 [`requirements.txt`](./requirements.txt)
 
+## Table of content
+
+This repo showcases models from the below ML tasks
+
+| ML Task    | ML Model | Description |
+| --------- | ------- | ------ |
+| CV     | [LeNet](src/models/cv/lenet) | Designed for Image Classification Task |
+|        | [AlexNet](src/models/cv/alexnet) | Designed for Image Classification Task |
+|        | [VGG16](src/models/cv/vggnet) | Designed for Image Classification Task |
+|        | [ResNet50](src/models/cv/resnet) | Designed for Image Classification Task |
+|        | [InceptionV1](src/models/cv/inception) | Designed for Image Classification Task |
+|        | [MobilenetV1](src/models/cv/mobilenet) | Designed for Image Classification Task |
+| NLP       | [Transformer](src/models/nlp/original_transformer) | Designed for Machine Translation |
+|        | [Bert](src/models/nlp/Bert) | Designed for Language Modeling |
+
+The above models are also registered in the following [model registry](src/model_registry.py)
+
+## Usage
+
+For visualizing a model for a task, please follow the following steps after running `conda activate <env_name>` 
+
+```python
+python main.py -t <MLTask> -m <MLModel as per the above task>
+```
+You can also check the various MLTask/MLModel in the following [model registry](src/model_registry.py)
 
 ## LICENSE 
 
