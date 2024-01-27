@@ -50,10 +50,17 @@ For other module installation, please follow the following steps:
 
 This repo showcases models from the below ML tasks
 
-| ML Task    | ML Models |
-| --------- | ------- |
-| CV     | [LeNet](src/models/cv/lenet) |
-|        | [AlexNet](src/models/cv/alexnet) |
+| ML Task    | ML Models | Description |
+| --------- | ------- | ------ |
+| CV     | [LeNet](src/models/cv/lenet) | Designed for Image Classification Task |
+|        | [AlexNet](src/models/cv/alexnet) | Designed for Image Classification Task |
+|        | [VGG16](src/models/cv/vggnet) | Designed for Image Classification Task |
+|        | [ResNet50](src/models/cv/resnet) | Designed for Image Classification Task |
+|        | [InceptionV1](src/models/cv/inception) | Designed for Image Classification Task |
+|        | [MobilenetV1](src/models/cv/mobilenet) | Designed for Image Classification Task |
+| NLP       | [Transformer](src/models/nlp/original_transformer) | Designed for Machine Translation |
+|        | [Bert](src/models/nlp/Bert) | Designed for Language Modeling |
+
 
 ## LICENSE 
 
