@@ -6,6 +6,7 @@ import src.model_registry as model_registry
 import src.models.cv.lenet.lenet as lenet
 import src.models.cv.alexnet.alexnet as alexnet
 import src.models.cv.vggnet.vgg as vgg
+import src.models.cv.resnet.resnet as resnet
 
 
 
@@ -21,6 +22,10 @@ class ModelLoader:
         self.model = None 
         model_list = [
                         model_registry.MLModel.lenet.name,
+                        model_registry.MLModel.alexnet.name,
+                        model_registry.MLModel.vgg16.name,
+                        model_registry.MLModel.resnet50.name,
+                        
                       ]
         # Get input params and instantiate model
         if self.model_name.lower() == model_registry.MLModel.lenet.name:
@@ -33,9 +38,14 @@ class ModelLoader:
             self.model = alexnet.AlexNet(
                             params, 
                             device=self.device)
-        elif self.model_name.lower() == model_registry.MLModel.vggnet.name:
+        elif self.model_name.lower() == model_registry.MLModel.vgg16.name:
             params = vgg.get_params()
             self.model = vgg.VGG16(
+                            params, 
+                            device=self.device)
+        elif self.model_name.lower() == model_registry.MLModel.resnet50.name:
+            params = resnet.get_params()
+            self.model = resnet.ResNet50(
                             params, 
                             device=self.device)
             

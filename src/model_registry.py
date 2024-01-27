@@ -10,11 +10,11 @@ class MLModel(enum.Enum):
     transformer = 1
     lenet = 3
     alexnet = 4
-    vggnet = 5
+    vgg16 = 5
+    resnet50 = 6
     # TODO below models
     # inception = 6
     # mobilenet = 7
-    # resnet = 8
 
 class MLTask(enum.Enum):
     nlp = 0
