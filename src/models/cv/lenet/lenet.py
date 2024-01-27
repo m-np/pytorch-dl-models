@@ -1,3 +1,7 @@
+"""
+Model - LeNet
+This model was developed for image classification task especially on MNIST data
+"""
 import math
 import copy
 import time

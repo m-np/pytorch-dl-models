@@ -7,6 +7,7 @@ import src.models.cv.lenet.lenet as lenet
 import src.models.cv.alexnet.alexnet as alexnet
 import src.models.cv.vggnet.vgg as vgg
 import src.models.cv.resnet.resnet as resnet
+import src.models.cv.inception.inception_v1 as inception
 
 
 
@@ -25,7 +26,7 @@ class ModelLoader:
                         model_registry.MLModel.alexnet.name,
                         model_registry.MLModel.vgg16.name,
                         model_registry.MLModel.resnet50.name,
-                        
+                        model_registry.MLModel.inception.name,
                       ]
         # Get input params and instantiate model
         if self.model_name.lower() == model_registry.MLModel.lenet.name:
@@ -46,6 +47,11 @@ class ModelLoader:
         elif self.model_name.lower() == model_registry.MLModel.resnet50.name:
             params = resnet.get_params()
             self.model = resnet.ResNet50(
+                            params, 
+                            device=self.device)
+        elif self.model_name.lower() == model_registry.MLModel.inception.name:
+            params = inception.get_params()
+            self.model = inception.Inception_v1(
                             params, 
                             device=self.device)
             

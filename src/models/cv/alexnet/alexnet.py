@@ -1,6 +1,8 @@
 """
 ALexnet model -
 reference : https://medium.com/@siddheshb008/alexnet-architecture-explained-b6240c528bd5
+
+This model was developed for image classification task on ImageNet Dataset
 """
 import math
 import copy

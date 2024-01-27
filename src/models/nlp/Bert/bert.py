@@ -1,3 +1,12 @@
+"""
+model - BertLM
+reference : https://arxiv.org/abs/1810.04805
+
+This model was developed for NLP task. It was trained especially for optimizing the following 2 objectives
+in the pre-training phase using wikipedia corpus
+1. Masked Language Modeling
+2. Next Sentence Prediction
+"""
 import math
 import copy
 import time

@@ -1,3 +1,8 @@
+"""
+Model - Vgg16
+
+This model was developed for image classification task on ImageNet Dataset
+"""
 import math
 import copy
 import time

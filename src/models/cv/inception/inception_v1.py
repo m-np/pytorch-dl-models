@@ -1,6 +1,6 @@
 """
-model - ResNet50
-reference : https://medium.com/@freshtechyy/a-detailed-introduction-to-resnet-and-its-implementation-in-pytorch-744b13c8074a
+model - Inception V1 
+reference : https://arxiv.org/abs/1409.4842
 
 This model was developed for image classification task on ImageNet Dataset
 """
@@ -39,86 +39,138 @@ def get_params():
             }
     return params
 
-
-class ResidBlock(nn.Module):
+class ConvBlock(nn.Module):
+    """
+    Convolution block consists of 
+    1. Convolution 2d
+    2. BatchNormalization
+    3. Relu
+    """
     def __init__(
-            self, 
+            self,
             in_channels, 
             out_channels, 
+            kernel_size,
             stride,
-            expansion,
-            skip_block = False):
+            padding,
+            bias = False):
         super().__init__()
 
-        self.layer1 = nn.Sequential(
+        self.conv = nn.Sequential(
                         nn.Conv2d(
                             in_channels = in_channels, 
                             out_channels = out_channels, 
-                            kernel_size = 1, 
-                            stride = 1, 
-                            padding = 0),
-                        nn.BatchNorm2d(out_channels),
-                        nn.ReLU(),
-                        )
-        
-        self.layer2 = nn.Sequential(
-                        nn.Conv2d(
-                            in_channels = out_channels, 
-                            out_channels = out_channels, 
-                            kernel_size = 3, 
+                            kernel_size = kernel_size, 
                             stride = stride, 
-                            padding = 1),
+                            padding = padding,
+                            bias = bias),
                         nn.BatchNorm2d(out_channels),
                         nn.ReLU(),
                         )
-        
-        # Don't add relu to this block since we will be adding skip_block
-        self.layer3 = nn.Sequential(
-                        nn.Conv2d(
-                            in_channels = out_channels, 
-                            out_channels = out_channels*expansion, 
-                            kernel_size = 1, 
-                            stride = 1, 
-                            padding = 0),
-                        nn.BatchNorm2d(out_channels*expansion),
-                        )
-        
-        self.skip_layer = None
-        if skip_block:
-            self.skip_layer = nn.Sequential(
-                                nn.Conv2d(
-                                    in_channels = in_channels, 
-                                    out_channels = out_channels*expansion, 
-                                    kernel_size = 1, 
-                                    stride = stride, 
-                                    padding = 0),
-                                nn.BatchNorm2d(out_channels*expansion),
-                                )
-
-        self.relu = nn.ReLU()
-
 
     def forward(self, x):
-        """
-        Args:
-            x: input
-        Returns:
-            Residual block output
-        """
-        x_2 = x.clone()
+        return self.conv(x)
+    
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
+class InceptionBlock(nn.Module):
+    """
+    Inception block is a combination of 4 individual blocks which are concated together
+    1. 1 x 1 convolution
+    2. 1 x 1 convolution followed by 3 x 3
+    3. 1 x 1 convolution followed by 5 x 5
+    4. Maxpooling followed by 1 x 1
 
-        if self.skip_layer:
-            x_2 = self.skip_layer(x_2)
+    To generate same height and width of output feature map as the input feature map, following should be padding for
+        * 1x1 conv : p=0
+        * 3x3 conv : p=1
+        * 5x5 conv : p=2
+    """
+
+    def __init__(
+            self,
+            in_channels,
+            out1,
+            out21,
+            out22,
+            out31,
+            out32,
+            out4,
+            ):
+        """
+        Input Args:
+        in_channels = Input channels
+        out1 = Filter size for 1x1 conv in branch 1
+        out21 = Filter size for 3x3 conv in branch 2
+        out22 = Filter size for 1x1 conv in branch 2
+        out31 = Filter size for 5x5 conv in branch 3
+        out32 = Filter size for 1x1 conv in branch 3
+        out4 = Filter size for 1x1 conv in branch 4
+        """
+        super().__init__()
+
+        # branch1 : k=1,s=1,p=0
+        self.branch1 = ConvBlock(
+                        in_channels = in_channels, 
+                        out_channels = out1, 
+                        kernel_size = 1, 
+                        stride = 1, 
+                        padding= 0)
         
-        x += x_2
-        return self.relu(x)
+        # branch2 : k=1,s=1,p=0 -> k=3,s=1,p=1
+        self.branch2 = nn.Sequential(
+                        ConvBlock(
+                            in_channels = in_channels, 
+                            out_channels = out21, 
+                            kernel_size = 1, 
+                            stride = 1, 
+                            padding= 0),
+                        ConvBlock(
+                            in_channels = in_channels, 
+                            out_channels = out22, 
+                            kernel_size = 3, 
+                            stride = 3, 
+                            padding= 1)
+                        )
+        
+        # branch3 : k=1,s=1,p=0 -> k=5,s=1,p=2
+        self.branch3 = nn.Sequential(
+                        ConvBlock(
+                            in_channels = in_channels, 
+                            out_channels = out31, 
+                            kernel_size = 1, 
+                            stride = 1, 
+                            padding= 0),
+                        ConvBlock(
+                            in_channels = in_channels, 
+                            out_channels = out32, 
+                            kernel_size = 5, 
+                            stride = 5, 
+                            padding= 2)
+                        )
+        
+        # branch4 : pool(k=3,s=1,p=1) -> k=1,s=1,p=0
+        self.branch4 = nn.Sequential(
+                        nn.MaxPool2d(
+                            kernel_size = 3, 
+                            stride = 1,
+                            padding = 1),
+                        ConvBlock(
+                            in_channels = in_channels, 
+                            out_channels = out4, 
+                            kernel_size = 1, 
+                            stride = 1, 
+                            padding= 0)
+                        )
+
+    def forward(self, x):
+        out1 = self.branch1(x)
+        out2 = self.branch2(x)
+        out3 = self.branch3(x)
+        out4 = self.branch4(x)
+        return torch.cat([out1, out2, out3, out4], dim=1)
 
 
-class ResNet50(nn.Module):
+class Inception_v1(nn.Module):
     """
     Consists of 4 resid blocks and FC layer at the end
     """
@@ -139,6 +191,8 @@ class ResNet50(nn.Module):
         conv2_filters = params["conv2_filters"]
         conv3_filters = params["conv3_filters"]
         conv4_filters = params["conv4_filters"]
+
+
 
 
         self.layer1 = nn.Sequential(
@@ -198,34 +252,6 @@ class ResNet50(nn.Module):
                             in_features=conv4_filters*expansion, 
                             out_features=num_classes)
 
-        
-    def create_resid_layers(
-            self,
-            in_channels,
-            out_channels,
-            stride,
-            expansion,
-            num_blocks):
-
-        layers = []
-        for i in range(num_blocks):
-            if i == 0:
-                # Downsample the first layer by adding skip block
-                resid_layer = ResidBlock(
-                                    in_channels,
-                                    out_channels,
-                                    stride = stride,
-                                    expansion = expansion,
-                                    skip_block=True)
-            else:
-                resid_layer = ResidBlock(
-                                    out_channels*expansion,
-                                    out_channels,
-                                    stride = 1,
-                                    expansion = expansion,
-                                    skip_block=False)
-            layers.append(resid_layer)
-        return nn.Sequential(*layers)
         
     def forward(self, x):
         # Perform convolutions

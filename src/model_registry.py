@@ -12,8 +12,8 @@ class MLModel(enum.Enum):
     alexnet = 4
     vgg16 = 5
     resnet50 = 6
+    inception = 7
     # TODO below models
-    # inception = 6
     # mobilenet = 7
 
 class MLTask(enum.Enum):
