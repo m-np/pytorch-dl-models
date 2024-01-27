@@ -13,8 +13,7 @@ class MLModel(enum.Enum):
     vgg16 = 5
     resnet50 = 6
     inception = 7
-    # TODO below models
-    # mobilenet = 7
+    mobilenet = 8
 
 class MLTask(enum.Enum):
     nlp = 0
