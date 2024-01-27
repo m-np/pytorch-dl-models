@@ -61,6 +61,8 @@ This repo showcases models from the below ML tasks
 | NLP       | [Transformer](src/models/nlp/original_transformer) | Designed for Machine Translation |
 |        | [Bert](src/models/nlp/Bert) | Designed for Language Modeling |
 
+The above models are also registered in the following [model registry](src/model_registry.py)
+
 ## Usage
 
 For visualizing a model for a task, please follow the following steps after running `conda activate <env_name>` 
