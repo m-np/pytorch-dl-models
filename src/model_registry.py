@@ -1,9 +1,8 @@
-import time
-import os
 import enum
-import json
-from src.models.nlp.load_model import ModelLoader as NLPModelLoader
+
 from src.models.cv.load_model import ModelLoader as CVModelLoader
+from src.models.nlp.load_model import ModelLoader as NLPModelLoader
+
 
 class MLModel(enum.Enum):
     bertlm = 0
@@ -15,16 +14,17 @@ class MLModel(enum.Enum):
     inception = 7
     mobilenet = 8
 
+
 class MLTask(enum.Enum):
     nlp = 0
     cv = 1
 
-def get_model(ml_task, model_name):   
 
+def get_model(ml_task, model_name):
     loader = None
     if ml_task == MLTask.nlp.name:
         loader = NLPModelLoader(model_name)
     elif ml_task == MLTask.cv.name:
         loader = CVModelLoader(model_name)
-        
+
     return loader
