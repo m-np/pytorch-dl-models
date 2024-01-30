@@ -1,19 +1,18 @@
 """
-model - BertLM
-reference : https://arxiv.org/abs/1810.04805
+model - Wavenet
+reference : https://arxiv.org/abs/1609.03499
 
-This model was developed for NLP task. It was trained especially for optimizing the following 2 objectives
-in the pre-training phase using wikipedia corpus
-1. Masked Language Modeling
-2. Next Sentence Prediction
+This model was developed for Audio task as a generative network. However, it can
+perform following task:
+1. Speech Recognition
+2. TTS vocoder
+3. Speech Generation
 """
 
 # torch packages
 import torch.nn as nn
 
-from src.models.nlp.Bert.attention_sublayers import (BertEmbedding,
-                                                     MultiHeadAttention,
-                                                     PositionwiseFeedForward)
+from src.models.audio.Wavenet.sublayers import WaveBlock
 
 
 def get_params():
