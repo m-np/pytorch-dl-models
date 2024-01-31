@@ -60,6 +60,7 @@ This repo showcases models from the below ML tasks
 |        | [MobilenetV1](src/models/cv/mobilenet) | Designed for Image Classification Task |
 | NLP       | [Transformer](src/models/nlp/original_transformer) | Designed for Machine Translation |
 |        | [Bert](src/models/nlp/Bert) | Designed for Language Modeling |
+| Audio  | [Bert](src/models/audio/Wavenet) | Designed for Speech generation |
 
 The above models are also registered in the following [model registry](src/model_registry.py)
 
