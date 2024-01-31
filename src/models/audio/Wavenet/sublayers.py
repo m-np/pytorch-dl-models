@@ -125,7 +125,7 @@ class WaveBlock(nn.Module):
         # Page 4 of the wavenet paper, chapter 2.5
         # Global conditioning
         self.conv_global = None
-        if self.global_conditioning_channels > 0:
+        if global_conditioning_channels > 0:
             self.conv_global = nn.Conv1d(
                                     in_channels = global_conditioning_channels,
                                     out_channels = gate_channels,
@@ -138,12 +138,14 @@ class WaveBlock(nn.Module):
         self.conv_out = nn.Conv1d(
                             in_channels = gate_out_channels,
                             out_channels = in_channels,
+                            kernel_size = 1,
                             bias = bias,
                             )
 
         self.conv_skip = nn.Conv1d(
                             in_channels = gate_out_channels,
                             out_channels = skip_channels,
+                            kernel_size = 1,
                             bias = bias,
                             )
         

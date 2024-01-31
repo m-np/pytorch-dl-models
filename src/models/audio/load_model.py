@@ -4,6 +4,8 @@ import torch
 
 import src.model_registry as model_registry
 
+import src.models.audio.Wavenet.wavenet as wavenet
+
 
 class ModelLoader:
     def __init__(self, model_name):
@@ -16,20 +18,17 @@ class ModelLoader:
 
         self.model = None
         model_list = [
-            model_registry.MLModel.transformer.name,
-            model_registry.MLModel.bertlm.name,
+            model_registry.MLModel.wavenet.name,
         ]
         # Get input params and instantiate model
-        if self.model_name.lower() == model_registry.MLModel.transformer.name:
-            params = transformer.get_params()
-            self.model = transformer.Transformer(params, device=self.device)
+        if self.model_name.lower() == model_registry.MLModel.wavenet.name:
+            params = wavenet.get_params()
+            self.model = wavenet.WaveNet(params, device=self.device)
 
-        elif self.model_name.lower() == model_registry.MLModel.bertlm.name:
-            params = bert.get_params()
-            self.model = bert.BERTLM(params, device=self.device)
+
         else:
             raise AssertionError(
-                f"model {model_name} is not registered in NLP in model_registry pick from following list: {model_list}"
+                f"model {model_name} is not registered in audio in model_registry pick from following list: {model_list}"
             )
 
         if self.model and torch.cuda.is_available():
