@@ -3,7 +3,6 @@
 import torch
 
 import src.model_registry as model_registry
-
 import src.models.audio.Wavenet.wavenet as wavenet
 
 
@@ -24,7 +23,6 @@ class ModelLoader:
         if self.model_name.lower() == model_registry.MLModel.wavenet.name:
             params = wavenet.get_params()
             self.model = wavenet.WaveNet(params, device=self.device)
-
 
         else:
             raise AssertionError(
