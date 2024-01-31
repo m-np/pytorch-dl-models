@@ -9,9 +9,10 @@ perform following task:
 3. Speech Generation
 """
 
+import math
+
 # torch packages
 import torch.nn as nn
-import math
 
 from src.models.audio.Wavenet.sublayers import WaveBlock
 
@@ -37,9 +38,10 @@ def get_params():
 class WaveNet(nn.Module):
     """
     Wavenet Model
-    The idea is to optimize 
+    The idea is to optimize
     1. Speech Generation
     """
+
     def __init__(
         self,
         params,
@@ -62,58 +64,49 @@ class WaveNet(nn.Module):
 
         layers_per_stack = num_layers // stacks
 
-        self.first_conv = nn.Conv1d(
-                                in_channels, 
-                                residual_channels,
-                                kernel_size=1)
+        self.first_conv = nn.Conv1d(in_channels, residual_channels, kernel_size=1)
 
         # Add resid block
         self.waveblocks = nn.ModuleList()
         for layer in range(num_layers):
-            dilation = 2**(layer % layers_per_stack)
+            dilation = 2 ** (layer % layers_per_stack)
             block = WaveBlock(
-                        in_channels = residual_channels, 
-                        gate_channels = gate_channels, 
-                        kernel_size = kernel_size, 
-                        stride = 1, 
-                        dilation = dilation, 
-                        skip_channels = skip_channels, 
-                        local_conditioning_channels = local_conditioning_channels, 
-                        global_conditioning_channels = global_conditioning_channels, 
-                        pdropout = pdropout, 
-                        bias = True)
+                in_channels=residual_channels,
+                gate_channels=gate_channels,
+                kernel_size=kernel_size,
+                stride=1,
+                dilation=dilation,
+                skip_channels=skip_channels,
+                local_conditioning_channels=local_conditioning_channels,
+                global_conditioning_channels=global_conditioning_channels,
+                pdropout=pdropout,
+                bias=True,
+            )
             self.waveblocks.append(block)
 
         # Add Output blocks
         self.final_block = nn.Sequential(
-                        nn.ReLU(inplace=True),
-                        nn.Conv1d(
-                            skip_channels, 
-                            skip_channels, 
-                            kernel_size=1),        # Use skip connections as input and not x
-                        nn.ReLU(inplace=True),
-                        nn.Conv1d(
-                            skip_channels, 
-                            in_channels, 
-                            kernel_size=1),
-                        )
+            nn.ReLU(inplace=True),
+            nn.Conv1d(
+                skip_channels, skip_channels, kernel_size=1
+            ),  # Use skip connections as input and not x
+            nn.ReLU(inplace=True),
+            nn.Conv1d(skip_channels, in_channels, kernel_size=1),
+        )
 
         if global_conditioning_channels > 0 and use_speaker_embedding:
             assert n_speakers is not None
             self.embed_speakers = nn.Embedding(
-                                    n_speakers, 
-                                    global_conditioning_channels, 
-                                    padding_idx=None, 
-                                    std=0.1)
+                n_speakers, global_conditioning_channels, padding_idx=None, std=0.1
+            )
         else:
             self.embed_speakers = None
 
         self.softmax = nn.Softmax(dim=1)
 
-
     def forward(self, x, c=None, g=None, softmax=False):
         """
-        Args: 
+        Args:
             x (Tensor): One-hot encoded audio signal, shape (B x C x l)
             c (Tensor): Local conditioning features,
               shape (B x cin_channels x l)
@@ -128,7 +121,7 @@ class WaveNet(nn.Module):
         """
         # Get Batch size
         B = x.size()[0]
-        
+
         if g is not None:
             if self.embed_speakers is not None:
                 # (B x 1) -> (B x 1 x gin_channels)
@@ -136,7 +129,7 @@ class WaveNet(nn.Module):
                 # (B x gin_channels x 1)
                 g = g.transpose(1, 2)
                 assert g.dim() == 3
-        
+
         # Feed data to network
         x = self.first_conv(x)
 
@@ -152,4 +145,3 @@ class WaveNet(nn.Module):
         x = self.softmax(x) if softmax else x
 
         return x
-
