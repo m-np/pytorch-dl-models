@@ -3,8 +3,8 @@
 import torch
 
 import src.model_registry as model_registry
-import src.models.audio.Wavenet.wavenet as wavenet
 import src.models.audio.Tacotron2.tacotron2 as tacotron2
+import src.models.audio.Wavenet.wavenet as wavenet
 
 
 class ModelLoader:
