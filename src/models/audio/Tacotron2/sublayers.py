@@ -1,5 +1,8 @@
 """
-Wavenet paper - https://arxiv.org/abs/1609.03499
+reference code : https://github.com/NVIDIA/tacotron2/blob/master/model.py
+
+This model was developed for Audio task for TTS Application. 
+The following code is referenced from the above refernce code. 
 """
 
 # importing required libraries
@@ -10,190 +13,215 @@ import torch
 import torch.nn as nn
 
 
-class CausalConv1d(nn.Module):
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size=1,
-        stride=1,
-        dilation=1,
-        bias=True,
-        device=None,
-        dtype=None,
-    ):
+class Embedding(nn.Module):
+    def __init__(self, vocab_size, embed_size):
         """
-        Input Args as per Conv1D documentation
-        https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+        Input Args:
+        vocab_size : Total vocab size
+        embed_size : Embedding size of token embedding
         """
-        super().__init__()
-
-        # Attributes
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.kernel_size = kernel_size
-        self.stride = stride
-        # Padding calculation when dilation is used
-        self.padding = (kernel_size - 1) * dilation
-        self.dilation = dilation
-        self.bias = bias
-        self.device = device
-        self.dtype = dtype
-
-        self.conv = nn.Conv1d(
-            in_channels=self.in_channels,
-            out_channels=self.out_channels,
-            kernel_size=self.kernel_size,
-            stride=self.stride,
-            padding=self.padding,
-            dilation=self.dilation,
-            bias=self.bias,
-            device=self.device,
-            dtype=self.dtype,
-        )
+        super(Embedding, self).__init__()
+        self.input_embeddings = nn.Embedding(vocab_size, embed_size, padding_idx=0)
 
     def forward(self, x):
+        return self.input_embeddings[x]
+    
+class Locationlayer(nn.Module):
+    def __init__(
+                self, 
+                attention_filters, 
+                attention_kernel_size, 
+                attention_embedding):
+        super(Locationlayer, self).__init__()
+
+        padding = int(attention_kernel_size-1/2)
+        self.conv = nn.Conv1d(
+                                2, 
+                                attention_filters, 
+                                kernel_size = attention_kernel_size,
+                                padding = padding)
+        self.linear = nn.Linear(
+                                attention_filters, 
+                                attention_embedding)
+
+    def forward(self, attention_wts):
+        attention_wts = self.conv(attention_wts)
+        attention_wts = attention_wts.transpose(1,2)
+        attention_wts = self.linear(attention_wts)
+        return attention_wts
+    
+
+class LocationSensitiveAttention(nn.Module):
+    def __init__(
+                self,
+                attention_rnn_dim,
+                attention_dim,
+                embedding_dim,
+                attention_filters,
+                attention_kernel_size
+                ):
+        super(LocationSensitiveAttention, self).__init__()
+
+        self.q = nn.Linear(
+                            attention_rnn_dim,
+                            attention_dim
+                           )
+        # self.k = nn.Linear(
+        #                     embedding_dim,
+        #                     attention_dim
+        #                    )
+        self.v = nn.Linear(
+                            attention_dim,
+                            1
+                           )
+        self.Locationlayer = Locationlayer(
+                            attention_filters = attention_filters, 
+                            attention_kernel_size = attention_kernel_size, 
+                            attention_embedding = attention_dim)
+        
+        # Initialize mask for masking attention alignment
+        self.score_mask_value = -float("inf")
+        self.softmax = nn.Softmax(dim = 1)
+        
+    def get_alignment(
+                self, 
+                query, 
+                processed_memory, 
+                attention_wts):
         """
-        x -> (Batch_size, N_channels, seq_length)
+        Input Args:
+
+            query: decoder output (batch, n_mel_channels * n_frames_per_step)
+            processed_memory: processed encoder outputs (B, T_in, attention_dim)
+            attention_wts: cumulative and prev. att weights (B, 2, max_time) <- Remeber input filter of location layer is 2
+
+        Output Args:
+
+            alignment:  (batch, max_time)
         """
-        # Make sure to remove k-1 featurees in the end as this will ensure that
-        # we don't use future result in our calculation for present state
-        x = self.conv(x)
-        x = x[:, :, 0 : -(self.kernel_size - 1)]
+        query = self.q(query.unsqueeze(1))                 # <- (B, T, dim)
+        attention_wts = self.Locationlayer(attention_wts)  # <- (B, T, atten_embed)
+
+        additive_inputs = query + attention_wts + processed_memory
+
+        out = self.v(torch.tanh(additive_inputs))
+        out = out.squeeze(-1)
+        return out
+
+
+    def forward(
+            self, 
+            attention_hidden_state, 
+            memory, 
+            processed_memory,
+            attention_weights_cat, 
+            mask):
+        """
+        Input Args:
+        
+            attention_hidden_state: attention rnn last output
+            memory: encoder outputs
+            processed_memory: processed encoder outputs
+            attention_weights_cat: previous and cummulative attention weights
+            mask: binary mask for padded data
+        """
+        
+        alignment = self.get_alignment(
+                            query = attention_hidden_state, 
+                            processed_memory = processed_memory, 
+                            attention_wts = attention_weights_cat)
+        
+        if mask is not None:
+            alignment.data.masked_fill_(
+                                    mask, 
+                                    self.score_mask_value)
+            
+        # Similar to what we saw in attention to all you need paper in self_attention
+        attention_weights = self.softmax(alignment)   
+
+        # Batch matrix multiplication
+        attention_context = torch.bmm(
+                            attention_weights.unsqueeze(1), 
+                            memory)
+        
+        attention_context = attention_context.squeeze(1)
+
+        return attention_context, attention_weights
+        
+class PreNet(nn.Module):
+    def __init__(
+            self,
+            in_dim,
+            sizes,
+            prenet_dropout):
+        super(PreNet, self).__init__()
+        input_size = [in_dim] + sizes[:-1]
+
+        self.conv_filter_list = []
+        for in_size, out_size in zip(input_size, sizes):
+            conv = nn.Sequential(
+                                nn.Linear(in_size, out_size),
+                                nn.ReLU(inplace=True),
+                                )
+            self.conv_filter_list.append(conv)
+        self.conv_filter_list = nn.ModuleList(self.conv_filter_list)
+        self.dropout = nn.Dropout(p = prenet_dropout)
+
+    def forward(self, x):
+        for conv in self.conv_filter_list:
+            x = self.dropout(conv(x))
         return x
 
 
-class WaveBlock(nn.Module):
-    """
-    This block consists of Residual Convolution with Gated linear unit
-
-    Reference : https://github.com/r9y9/wavenet_vocoder/blob/master/wavenet_vocoder/modules.py
-    """
-
+class PostNet(nn.Module):
     def __init__(
-        self,
-        in_channels,
-        gate_channels,
-        kernel_size,
-        stride,
-        dilation,
-        skip_channels=None,
-        local_conditioning_channels=-1,
-        global_conditioning_channels=-1,
-        pdropout=0.1,
-        bias=True,
-    ):
-        """
-        Input Args:
-        in_channels: Input/output channel to the unit
-        gate_channels: Gated activation channel
-        kernel_size: Size of kernels of convolution layer
-        stride: Strides of convolution window
-        dilation: Dilation factor
-        skip_channels: Skip connections channel. set to in_channels if None
-        local_conditioning_channels: Input local conditioning channel, if -ve then its disabled
-        global_conditioning_channels: Input global conditioning channel, if -ve then its disabled
-        pdropout: Dropout Probability
-        bias = True,
-        """
-        super(WaveBlock, self).__init__()
+                self, 
+                num_layers, 
+                postnet_dropout,
+                postnet_kernel_size,
+                postnet_embedding_dim,
+                n_mel_channels,
+                ):
+        super(PostNet, self).__init__()
 
-        self.dilation = dilation
+        padding = int(postnet_kernel_size-1/2)
 
-        self.dropout = nn.Dropout(p=pdropout)
+        self.conv = nn.ModuleList()
+        layer = nn.Sequential(
+                            nn.Conv1d(
+                                n_mel_channels, 
+                                postnet_embedding_dim,
+                                kernel_size = postnet_kernel_size,
+                                padding = padding),
+                            nn.BatchNorm1d(postnet_embedding_dim),
+                            nn.Tanh(),
+                            )
+        self.conv.append(layer)
 
-        if skip_channels is None:
-            skip_channels = in_channels
-
-        self.conv = CausalConv1d(
-            in_channels=in_channels,
-            out_channels=gate_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            dilation=dilation,
-            bias=bias,
-        )
-
-        # Page 5 of the wavenet paper, chapter 2.5
-        # Local conditioning
-        self.conv_local = None
-        if local_conditioning_channels > 0:
-            self.conv_local = nn.Conv1d(
-                in_channels=local_conditioning_channels,
-                out_channels=gate_channels,
-                bias=False,
-            )
-
-        # Page 4 of the wavenet paper, chapter 2.5
-        # Global conditioning
-        self.conv_global = None
-        if global_conditioning_channels > 0:
-            self.conv_global = nn.Conv1d(
-                in_channels=global_conditioning_channels,
-                out_channels=gate_channels,
-                bias=False,
-            )
-
-        # conv output is split into two groups
-        gate_out_channels = gate_channels // 2
-
-        self.conv_out = nn.Conv1d(
-            in_channels=gate_out_channels,
-            out_channels=in_channels,
-            kernel_size=1,
-            bias=bias,
-        )
-
-        self.conv_skip = nn.Conv1d(
-            in_channels=gate_out_channels,
-            out_channels=skip_channels,
-            kernel_size=1,
-            bias=bias,
-        )
-
-    def forward(self, x, c=None, g=None):
-        """
-        Args:
-        x = Input feature -> Batch_size, Channel, Seq_len
-        # reference page 4 and 5 of Wavenet paper, chapter 2.5
-        c = local conditioning feature -> Batch_size, Channel, Seq_len
-        g = global conditioning feature -> Batch_size, Channel, Seq_len
-        """
-        residual = x
-        x = self.dropout(x)
-        # Apply causal convolution
-        x = self.conv(x)
-        # Split the features for gated input on the channel dimensions
-        splitdim = 1
-        a, b = x.split(x.size(splitdim) // 2, dim=splitdim)
-
-        # Apply local conditioning
-        if c is not None:
-            assert (
-                self.conv_local is not None
-            ), f"Initialize local_conditioning_channels to apply local conditioning"
-
-            c = self.conv_local(c)
-            ca, cb = x.split(c.size(splitdim) // 2, dim=splitdim)
-            a, b = a + ca, b + cb
-
-        # Apply global conditioning
-        if g is not None:
-            assert (
-                self.conv_global is not None
-            ), f"Initialize global_conditioning_channels to apply global conditioning"
-
-            g = self.conv_global(g)
-            ga, gb = x.split(g.size(splitdim) // 2, dim=splitdim)
-            a, b = a + ga, b + gb
-
-        x = torch.tanh(a) * torch.sigmoid(b)
-
-        # Apply skip connection
-        s = self.conv_skip(x)
-
-        # Apply residual connection
-        x = self.conv_out(x)
-        x = (x + residual) * math.sqrt(0.5)
-
-        return x, s
+        for _ in range(1, num_layers-1):
+            layer = nn.Sequential(
+                                nn.Conv1d(
+                                    postnet_embedding_dim, 
+                                    postnet_embedding_dim,
+                                    kernel_size = postnet_kernel_size,
+                                    padding = padding),
+                                nn.BatchNorm1d(postnet_embedding_dim),
+                                nn.Tanh(),
+                                )
+            self.conv.append(layer)
+        
+        layer = nn.Sequential(
+                            nn.Conv1d(
+                                postnet_embedding_dim, 
+                                n_mel_channels,
+                                kernel_size = postnet_kernel_size,
+                                padding = padding),
+                            nn.BatchNorm1d(n_mel_channels),
+                            )
+        self.conv.append(layer)
+        self.dropout = nn.Dropout(p = postnet_dropout)
+            
+    def forward(self, x):
+        for conv in self.conv:
+            x = self.dropout(conv(x))
+        return x
