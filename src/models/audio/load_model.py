@@ -3,6 +3,7 @@
 import torch
 
 import src.model_registry as model_registry
+import src.models.audio.Tacotron2.tacotron2 as tacotron2
 import src.models.audio.Wavenet.wavenet as wavenet
 
 
@@ -18,11 +19,15 @@ class ModelLoader:
         self.model = None
         model_list = [
             model_registry.MLModel.wavenet.name,
+            model_registry.MLModel.tacotron2.name,
         ]
         # Get input params and instantiate model
         if self.model_name.lower() == model_registry.MLModel.wavenet.name:
             params = wavenet.get_params()
             self.model = wavenet.WaveNet(params, device=self.device)
+        elif self.model_name.lower() == model_registry.MLModel.tacotron2.name:
+            params = tacotron2.get_params()
+            self.model = tacotron2.Tacotron2(params, device=self.device)
 
         else:
             raise AssertionError(

@@ -15,6 +15,7 @@ class MLModel(enum.Enum):
     inception = 7
     mobilenet = 8
     wavenet = 9
+    tacotron2 = 10
 
 
 class MLTask(enum.Enum):
