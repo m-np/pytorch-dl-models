@@ -61,6 +61,7 @@ This repo showcases models from the below ML tasks
 | NLP       | [Transformer](src/models/nlp/original_transformer) | Designed for Machine Translation |
 |        | [Bert](src/models/nlp/Bert) | Designed for Language Modeling |
 | Audio  | [Wavenet](src/models/audio/Wavenet) | Designed for Speech generation |
+|        | [Tacotron2](src/models/audio/Tacotron2) | Designed for Speech |
 
 The above models are also registered in the following [model registry](src/model_registry.py)
 
