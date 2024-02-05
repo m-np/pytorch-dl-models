@@ -58,7 +58,7 @@ This repo showcases models from the below ML tasks
 |        | [ResNet50](src/models/cv/resnet) | Designed for Image Classification Task |
 |        | [InceptionV1](src/models/cv/inception) | Designed for Image Classification Task |
 |        | [MobilenetV1](src/models/cv/mobilenet) | Designed for Image Classification Task |
-| NLP       | [Transformer](src/models/nlp/original_transformer) | Designed for Machine Translation |
+| NLP    | [Transformer](src/models/nlp/original_transformer) | Designed for Machine Translation |
 |        | [Bert](src/models/nlp/Bert) | Designed for Language Modeling |
 | Audio  | [Wavenet](src/models/audio/Wavenet) | Designed for Speech generation |
 |        | [Tacotron2](src/models/audio/Tacotron2) | Designed for Speech |
@@ -81,4 +81,15 @@ You can also check the various MLTask/MLModel in the following [model registry](
 
 ## Resources
 
-<p align = "justify">:card_index: To be updated :key:</p>
+<p align = "justify">
+  References obtained from following sources :
+   
+AlexNet - [blog](https://medium.com/@siddheshb008/alexnet-architecture-explained-b6240c528bd5)  </br>
+ResNet50 - [blog](https://medium.com/@freshtechyy/a-detailed-introduction-to-resnet-and-its-implementation-in-pytorch-744b13c8074a) </br>
+InceptionV1 - [research paper](https://arxiv.org/abs/1409.4842) </br>
+MobilenetV1 - [research paper](https://arxiv.org/abs/1704.04861) </br>
+Transformer - [blog](https://medium.com/@hunter-j-phillips/multi-head-attention-7924371d477a) [research paper](https://arxiv.org/abs/1706.03762) </br>
+Bert - [blog](https://medium.com/@hunter-j-phillips/multi-head-attention-7924371d477a) [research paper](https://arxiv.org/abs/1810.04805) </br>
+Wavenet - [research paper](https://arxiv.org/abs/1609.03499) [reference code](https://github.com/r9y9/wavenet_vocoder/blob/master/wavenet_vocoder/modules.py) </br>
+Tacotron2 - [research paper](https://arxiv.org/abs/1712.05884) [reference code](https://github.com/NVIDIA/tacotron2/blob/master/model.py) </br>
+</p>

@@ -8,7 +8,6 @@ This model was developed for Audio task for TTS Application. The following code 
 code. 
 """
 
-
 # torch packages
 import torch
 import torch.nn as nn
