@@ -5,13 +5,14 @@ reference : https://arxiv.org/abs/1803.03467
 This model was developed by combining graph based traversal with embedding based architecture
 for recommendations task. 
 """
+
+import numpy as np
 # torch packages
 import torch
 import torch.nn as nn
-from torch import Tensor
 import torch.nn.functional as F
 from sklearn.metrics import roc_auc_score
-import numpy as np
+
 
 def get_params():
     # The following params are for training DE-EN model on Multi30K data
@@ -26,6 +27,7 @@ def get_params():
         "l2_weight": 1e-7,
     }
     return params
+
 
 class RippleNet(nn.Module):
     def __init__(
@@ -44,29 +46,22 @@ class RippleNet(nn.Module):
         self.l2_weight = params["l2_weight"]
 
         # Modules required to build Encoder
-        self.item_embedding = nn.Embedding(
-                                            self.n_entity, 
-                                            self.dim)
-        self.relation_embedding = nn.Embedding(
-                                            self.n_relations, 
-                                            self.dim * self.dim)
-        self.transform_matrix = nn.Linear(
-                                            self.dim, 
-                                            self.dim, 
-                                            bias=False)
+        self.item_embedding = nn.Embedding(self.n_entity, self.dim)
+        self.relation_embedding = nn.Embedding(self.n_relations, self.dim * self.dim)
+        self.transform_matrix = nn.Linear(self.dim, self.dim, bias=False)
         self.criterion = nn.BCELoss()
 
     def forward(
-                self, 
-                items, 
-                labels,
-                memories_h: list,
-                memories_r: list,
-                memories_t: list,
-                ):
-        
+        self,
+        items,
+        labels,
+        memories_h: list,
+        memories_r: list,
+        memories_t: list,
+    ):
+
         self.item_embed = self.item_embedding(items)
-        
+
         self.h_emb_list = []
         self.r_emb_list = []
         self.t_emb_list = []
@@ -82,7 +77,7 @@ class RippleNet(nn.Module):
             )
             # [batch size, n_memory, dim]
             self.t_emb_list.append(self.item_embedding(memories_t[i]))
-        
+
         o_list = self._key_addressing()
         scores = self.predict(self.item_embed, o_list)
         scores = torch.sigmoid(scores)
@@ -90,7 +85,9 @@ class RippleNet(nn.Module):
         out["scores"] = scores
         return out
 
-    def _key_addressing(self,):
+    def _key_addressing(
+        self,
+    ):
         o_list = []
         for hop in range(self.n_hop):
             # [batch_size, n_memory, dim, 1]
@@ -117,7 +114,7 @@ class RippleNet(nn.Module):
             self.item_embed = self._update_item_embedding(self.item_embed, o)
             o_list.append(o)
         return o_list
-    
+
     def _update_item_embedding(self, item_embeddings, o):
         if self.item_update_mode == "replace":
             item_embeddings = o
@@ -130,7 +127,7 @@ class RippleNet(nn.Module):
         else:
             raise Exception("Unknown item updating mode: " + self.item_update_mode)
         return item_embeddings
-    
+
     def predict(self, item_embeddings, o_list):
         y = o_list[-1]
         if self.using_all_hops:
@@ -138,22 +135,19 @@ class RippleNet(nn.Module):
                 y += o_list[i]
 
         # [batch_size]
-        scores = (item_embeddings * y).sum(axis = 1)
+        scores = (item_embeddings * y).sum(axis=1)
         return scores
-    
-    def _build_loss(
-                    self, 
-                    scores, 
-                    labels):
+
+    def _build_loss(self, scores, labels):
         self.base_loss = self.criterion(scores, labels)
 
         self.kge_loss = 0
         for hop in range(self.n_hop):
             h_expanded = torch.unsqueeze(self.h_emb_list[hop], axis=2)
             t_expanded = torch.unsqueeze(self.t_emb_list[hop], axis=3)
-            hRt = torch.squeeze(torch.matmul(torch.matmul(
-                h_expanded, self.r_emb_list[hop]), t_expanded)
-                )
+            hRt = torch.squeeze(
+                torch.matmul(torch.matmul(h_expanded, self.r_emb_list[hop]), t_expanded)
+            )
             self.kge_loss += torch.sigmoid(hRt).mean()
         self.kge_loss = -self.kge_weight * self.kge_loss
 
@@ -166,26 +160,21 @@ class RippleNet(nn.Module):
 
         self.loss = self.base_loss + self.kge_loss + self.l2_loss
         return dict(
-                    base_loss = self.base_loss, 
-                    kge_loss = self.kge_loss, 
-                    l2_loss = self.l2_loss, 
-                    loss = self.loss)
-    
+            base_loss=self.base_loss,
+            kge_loss=self.kge_loss,
+            l2_loss=self.l2_loss,
+            loss=self.loss,
+        )
+
     def evaluate(
-                self, 
-                items, 
-                labels,
-                memories_h: list,
-                memories_r: list,
-                memories_t: list,
-                ):
-        out = self.forward(
-                            items, 
-                            labels,
-                            memories_h,
-                            memories_r,
-                            memories_t
-                            )
+        self,
+        items,
+        labels,
+        memories_h: list,
+        memories_r: list,
+        memories_t: list,
+    ):
+        out = self.forward(items, labels, memories_h, memories_r, memories_t)
         scores = out["scores"].detach().cpu().numpy()
         labels = labels.cpu().numpy()
         auc = roc_auc_score(y_true=labels, y_score=scores)
