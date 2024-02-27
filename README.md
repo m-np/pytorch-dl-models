@@ -62,6 +62,7 @@ This repo showcases models from the below ML tasks
 |        | [Bert](src/models/nlp/Bert) | Designed for Language Modeling |
 | Audio  | [Wavenet](src/models/audio/Wavenet) | Designed for Speech generation |
 |        | [Tacotron2](src/models/audio/Tacotron2) | Designed for Speech |
+| Recommendation System  | [Ripplenet](src/models/recommendation_system/ripplenet) | Designed for KG style personalization model |
 
 The above models are also registered in the following [model registry](src/model_registry.py)
 
