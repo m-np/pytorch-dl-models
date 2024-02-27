@@ -3,7 +3,8 @@ import enum
 from src.models.audio.load_model import ModelLoader as AudioModelLoader
 from src.models.cv.load_model import ModelLoader as CVModelLoader
 from src.models.nlp.load_model import ModelLoader as NLPModelLoader
-from src.models.recommendation_system.load_model import ModelLoader as RSModelLoader
+from src.models.recommendation_system.load_model import \
+    ModelLoader as RSModelLoader
 
 
 class MLModel(enum.Enum):
