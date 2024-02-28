@@ -63,6 +63,7 @@ This repo showcases models from the below ML tasks
 | Audio  | [Wavenet](src/models/audio/Wavenet) | Designed for Speech generation |
 |        | [Tacotron2](src/models/audio/Tacotron2) | Designed for Speech |
 | Recommendation System  | [Ripplenet](src/models/recommendation_system/ripplenet) | Designed for KG style personalization model |
+|        | [Neural Collaborative Filtering](src/models/recommendation_system/neural_collaborative_filtering) | Collaborative filtering with Neural Networks |
 
 The above models are also registered in the following [model registry](src/model_registry.py)
 

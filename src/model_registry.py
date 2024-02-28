@@ -19,6 +19,7 @@ class MLModel(enum.Enum):
     wavenet = 9
     tacotron2 = 10
     ripplenet = 11
+    ncf = 12
 
 
 class MLTask(enum.Enum):
