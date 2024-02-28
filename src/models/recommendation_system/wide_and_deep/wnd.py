@@ -1,9 +1,9 @@
 """
-model - Neural Collaborative Filtering
-reference : https://arxiv.org/abs/1708.05031
+model - Wide and Deep
+reference : https://arxiv.org/abs/1606.07792
 
-This model was developed by combining graph based traversal with embedding based architecture
-for recommendations task. 
+This model uses feature combinations through low-dimensional 
+dense embeddings learned for the sparse features
 """
 
 import numpy as np
@@ -18,7 +18,8 @@ def get_params():
         "items": 40000,
         "users": 2000000,
         "dim": 16,
-        "layers": [(16, 32), (32, 64), (63, 32), (32, 16)],
+        "layers": [1024, 512 ,256],
+        "continuous_feature_shape": 10,
     }
     return params
 
@@ -34,36 +35,39 @@ class WideAndDeep(nn.Module):
         self.users = params["users"]
         self.dim = params["dim"]
         self.layers = params["layers"]
-        
+        self.continuous_feature_shape = params["continuous_feature_shape"]
 
         # Modules required to build Encoder
         self.item_embedding = nn.Embedding(self.items, self.dim)
-        self.user_embedding = nn.Embedding(self.users, self.dim)
+        
+        self.fc_layer = nn.Sequential(
+            nn.Linear(self.dim + self.continuous_feature_shape, self.layers[0]),
+            nn.ReLU(),
+            nn.Linear(self.layers[0], self.layers[1]),
+            nn.ReLU(),
+            nn.Linear(self.layers[1], self.layers[2]),
+            nn.ReLU(),
+        )
 
-        self.fc_layers = nn.ModuleList()
-        for in_size, out_size in self.layers:
-            self.fc_layers.append(nn.Linear(in_size, out_size))
-        # Final layer
-        self.fc_layers.append(nn.Linear(self.layers[-1][1], 1))
-
-        self.sigmoid = nn.Sigmoid()
+        self.out = nn.Linear(self.items + self.layers[2], self.items),
+        
 
     def forward(
         self,
         item_index,
-        user_index,
+        continious,
+        binary,
     ):
 
-        user_embedding = self.user_embedding(user_index)
-        item_embedding = self.item_embedding(item_index)
-        
-        x = torch.cat([user_embedding, item_embedding], dim = -1)
-
-        for layer in self.fc_layers:
-            x = layer(x)
-            x = nn.ReLU()(x)
-        
-        out = self.sigmoid(x)
+        binary_embed = self.item_embedding(item_index)
+        binary_embed_mean = torch.mean(binary_embed, dim=1)
+        # get logits for "deep" part: continious features + binary embeddings
+        deep_logits = self.fc_layer(
+            torch.cat((continious, binary_embed_mean), 
+                      dim=1))
+        # get final softmax logits for "deep" part and raw binary features
+        out = self.head(
+            torch.cat((deep_logits, binary), dim=1))
         return out
 
     

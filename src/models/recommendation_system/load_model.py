@@ -32,10 +32,10 @@ class ModelLoader:
             self.model = ncf.NeuralCollabFilter(params, device=self.device)
         elif self.model_name.lower() == model_registry.MLModel.wnd.name:
             params = wnd.get_params()
-            self.model = wnd.NeuralCollabFilter(params, device=self.device)
+            self.model = wnd.WideAndDeep(params, device=self.device)
         elif self.model_name.lower() == model_registry.MLModel.dnc.name:
             params = dnc.get_params()
-            self.model = dnc.NeuralCollabFilter(params, device=self.device)
+            self.model = dnc.DeepAndCross(params, device=self.device)
 
         else:
             raise AssertionError(

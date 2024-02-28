@@ -1,9 +1,8 @@
 """
-model - Neural Collaborative Filtering
-reference : https://arxiv.org/abs/1708.05031
+model - Deep and Cross
+reference : https://arxiv.org/abs/1708.05123
 
-This model was developed by combining graph based traversal with embedding based architecture
-for recommendations task. 
+This model introduces feature crossing with DNN 
 """
 
 import numpy as np
