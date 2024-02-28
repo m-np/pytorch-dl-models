@@ -23,7 +23,7 @@ def get_params():
     return params
 
 
-class NeuralCollabFilter(nn.Module):
+class WideAndDeep(nn.Module):
     def __init__(
         self,
         params,
