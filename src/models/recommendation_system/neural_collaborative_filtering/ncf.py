@@ -1,6 +1,6 @@
 """
-model - Ripplenet
-reference : https://arxiv.org/abs/1803.03467
+model - Neural Collaborative Filtering
+reference : https://arxiv.org/abs/1708.05031
 
 This model was developed by combining graph based traversal with embedding based architecture
 for recommendations task. 
