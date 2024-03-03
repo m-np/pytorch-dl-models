@@ -18,7 +18,7 @@ def get_params():
         "items": 40000,
         "users": 2000000,
         "dim": 16,
-        "layers": [(16, 32), (32, 64), (63, 32), (32, 16)],
+        "layers": [(32, 64), (64, 32), (32, 16)],
     }
     return params
 
