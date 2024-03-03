@@ -2,10 +2,11 @@
 import torch
 
 import src.model_registry as model_registry
-import src.models.recommendation_system.ripplenet.ripplenet as ripplenet
-import src.models.recommendation_system.neural_collaborative_filtering.ncf as ncf
-import src.models.recommendation_system.wide_and_deep.wnd as wnd
 import src.models.recommendation_system.deep_and_cross.dnc as dnc
+import src.models.recommendation_system.neural_collaborative_filtering.ncf as ncf
+import src.models.recommendation_system.ripplenet.ripplenet as ripplenet
+import src.models.recommendation_system.wide_and_deep.wnd as wnd
+
 
 class ModelLoader:
     def __init__(self, model_name):

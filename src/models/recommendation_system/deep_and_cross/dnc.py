@@ -5,7 +5,6 @@ reference : https://arxiv.org/abs/1708.05123
 This model introduces feature crossing with DNN 
 """
 
-import numpy as np
 # torch packages
 import torch
 import torch.nn as nn
@@ -23,21 +22,18 @@ def get_params():
 
 
 class DeepNet(nn.Module):
-    def __init__(
-            self, 
-            input_shape, 
-            deep_layers):
+    def __init__(self, input_shape, deep_layers):
         super().__init__()
         fc_list = []
         fc_list.append(nn.Linear(input_shape, deep_layers[0]))
         fc_list.append(nn.BatchNorm1d(deep_layers[0]))
         fc_list.append(nn.ReLU())
         for i in range(1, len(deep_layers)):
-            fc_list.append(nn.Linear(deep_layers[i-1], deep_layers[i]))
+            fc_list.append(nn.Linear(deep_layers[i - 1], deep_layers[i]))
             fc_list.append(nn.BatchNorm1d(deep_layers[i]))
             fc_list.append(nn.ReLU())
         self.deep = nn.Sequential(*fc_list)
-  
+
     def forward(self, x):
         out = self.deep(x)
         return out
@@ -46,13 +42,11 @@ class DeepNet(nn.Module):
 class CrossNet(nn.Module):
     """
     Cross layer part in Cross and Deep Network
-    This module is x_0 * x_l^T * w_l + x_l + b_l 
+    This module is x_0 * x_l^T * w_l + x_l + b_l
     for each layer l, and x_0 is the init input of this module
     """
-    def __init__(
-            self,
-            input_shape,
-            cross_layers):
+
+    def __init__(self, input_shape, cross_layers):
         super().__init__()
 
     def forward(self):
@@ -70,7 +64,6 @@ class DeepAndCross(nn.Module):
         self.users = params["users"]
         self.dim = params["dim"]
         self.layers = params["layers"]
-        
 
         # Modules required to build Encoder
         self.item_embedding = nn.Embedding(self.items, self.dim)
@@ -92,14 +85,12 @@ class DeepAndCross(nn.Module):
 
         user_embedding = self.user_embedding(user_index)
         item_embedding = self.item_embedding(item_index)
-        
-        x = torch.cat([user_embedding, item_embedding], dim = -1)
+
+        x = torch.cat([user_embedding, item_embedding], dim=-1)
 
         for layer in self.fc_layers:
             x = layer(x)
             x = nn.ReLU()(x)
-        
+
         out = self.sigmoid(x)
         return out
-
-    

@@ -6,7 +6,6 @@ This model was developed by combining graph based traversal with embedding based
 for recommendations task. 
 """
 
-import numpy as np
 # torch packages
 import torch
 import torch.nn as nn
@@ -34,7 +33,6 @@ class NeuralCollabFilter(nn.Module):
         self.users = params["users"]
         self.dim = params["dim"]
         self.layers = params["layers"]
-        
 
         # Modules required to build Encoder
         self.item_embedding = nn.Embedding(self.items, self.dim)
@@ -56,14 +54,12 @@ class NeuralCollabFilter(nn.Module):
 
         user_embedding = self.user_embedding(user_index)
         item_embedding = self.item_embedding(item_index)
-        
-        x = torch.cat([user_embedding, item_embedding], dim = -1)
+
+        x = torch.cat([user_embedding, item_embedding], dim=-1)
 
         for layer in self.fc_layers:
             x = layer(x)
             x = nn.ReLU()(x)
-        
+
         out = self.sigmoid(x)
         return out
-
-    
